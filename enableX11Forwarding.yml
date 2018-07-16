@@ -1,0 +1,42 @@
+---
+- hosts: all            
+  gather_facts: true    
+  remote_user: admin
+  become: yes
+  vars:
+  tasks:
+    - name: Install Xauthority
+      apt:
+          name: xauth
+          state: present
+      when: ansible_distribution == 'Debain'
+
+    - name: Install Xauthority
+      yum:
+          name: xauth
+          state: present
+      when: ansible_distribution == 'RedHat'
+
+    - name: Enabling X11 Forwarding  
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^X11Forwarding'
+        line: 'X11Forwarding yes'
+      notify:
+        - restart_sshd
+        - restart_ssh
+
+  handlers:
+    - name: restart_sshd
+      service:
+          name: sshd
+          state: restarted
+          enabled: true
+      when: ansible_distribution == 'RedHat'
+
+    - name: restart_ssh 
+      service:
+          name: ssh
+          state: restarted
+          enabled: true
+      when: ansible_distribution == 'Debian'
